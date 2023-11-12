@@ -71,37 +71,45 @@ function display_monero_subaddress() {
 }
 
 // Check Monero Transaction Status and Redirect
-add_action('woocommerce_thankyou', 'check_monero_transaction_status', 10, 1);
-function check_monero_transaction_status($order_id) {
-    $subaddress = get_post_meta($order_id, '_monero_subaddress', true);
+add_action('woocommerce_new_order', 'generate_monero_subaddress', 10, 1);
 
-    if (!empty($subaddress)) {
-        $transaction_status = check_monero_transactions($subaddress);
+function generate_monero_subaddress($order_id) {
+    $subaddress = generate_monero_subaddress_function($order_id);
+    update_post_meta($order_id, '_monero_subaddress', $subaddress);
 
-        if ($transaction_status >= 1) {
-            wp_redirect(home_url());
-            exit;
-        } elseif ($transaction_status === 0) {
-            $product_id = get_post_meta($order_id, '_product_id', true);
-            wp_redirect(get_permalink($product_id));
-            exit;
-        } else {
-            wc_cancel_order($order_id);
-            wp_redirect(wc_get_page_permalink('shop'));
-            exit;
-        }
+    // Save additional information like product ID for redirection
+    $order = wc_get_order($order_id);
+    $items = $order->get_items();
+    foreach ($items as $item) {
+        $product_id = $item->get_product_id();
+        update_post_meta($order_id, '_product_id', $product_id);
+        break; // Assuming only one product in the order
     }
 }
 
+
 // Implement the function to generate Monero subaddress using Monero CLI
-function generate_monero_subaddress_function() {
+function generate_monero_subaddress_function($order_id) {
+    // Path to your Monero CLI executable
     $monero_cli_path = '~/monero-x86_64-linux-gnu-v0.18.3.1/monero-wallet-cli';
+
+    // Wallet file path
     $wallet_file = '~/monero-x86_64-linux-gnu-v0.18.3.1/mronion';
+
+    // Password file path
     $password_file = '~/woo.txt';
 
-    $command = escapeshellcmd("$monero_cli_path --wallet-file $wallet_file --password-file $password_file --command \"address new 0\"");
+    // Use the order ID as the label for the subaddress
+    $label = 'order_' . $order_id;
+
+    // Command to execute
+    $command = escapeshellcmd("$monero_cli_path --wallet-file $wallet_file --password-file $password_file --command \"address new $label\"");
+
+    // Execute the command
     $output = shell_exec($command);
 
+    // Process the output to extract the new subaddress
+    // Assuming the subaddress is the last line of the output
     $output_lines = explode("\n", trim($output));
     $subaddress = end($output_lines);
 
