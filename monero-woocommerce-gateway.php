@@ -43,7 +43,7 @@ function enqueue_countdown_timer_script() {
 // Generate Monero Subaddress and Save to Order
 add_action('woocommerce_new_order', 'generate_monero_subaddress', 10, 1);
 function generate_monero_subaddress($order_id) {
-    $subaddress = generate_monero_subaddress_function(); // Implement the function to generate subaddress
+    $subaddress = generate_monero_subaddress_function($order_id);
     update_post_meta($order_id, '_monero_subaddress', $subaddress);
 
     // Save additional information like product ID for redirection
@@ -71,22 +71,33 @@ function display_monero_subaddress() {
 }
 
 // Check Monero Transaction Status and Redirect
-add_action('woocommerce_new_order', 'generate_monero_subaddress', 10, 1);
+add_action('woocommerce_thankyou', 'check_monero_transaction_status', 10, 1);
+function check_monero_transaction_status($order_id) {
+    // Your logic to check Monero transaction status here
+    $subaddress = get_post_meta($order_id, '_monero_subaddress', true);
 
-function generate_monero_subaddress($order_id) {
-    $subaddress = generate_monero_subaddress_function($order_id);
-    update_post_meta($order_id, '_monero_subaddress', $subaddress);
+    if (!empty($subaddress)) {
+        // Assume your function to check Monero transactions is named check_monero_transactions
+        $transaction_status = check_monero_transactions($subaddress);
 
-    // Save additional information like product ID for redirection
-    $order = wc_get_order($order_id);
-    $items = $order->get_items();
-    foreach ($items as $item) {
-        $product_id = $item->get_product_id();
-        update_post_meta($order_id, '_product_id', $product_id);
-        break; // Assuming only one product in the order
+        if ($transaction_status >= 1) {
+            // Redirect user to home page for successful transaction
+            wp_redirect(home_url());
+            exit;
+        } elseif ($transaction_status === 0) {
+            // Redirect user to product page if the transaction is in progress (0 confirmation)
+            $product_id = get_post_meta($order_id, '_product_id', true); // Adjust this based on your setup
+            wp_redirect(get_permalink($product_id));
+            exit;
+        } else {
+            // Transaction failed or not confirmed after 40 minutes, cancel the order
+            wc_cancel_order($order_id);
+            // Redirect user to the shop page
+            wp_redirect(wc_get_page_permalink('shop'));
+            exit;
+        }
     }
 }
-
 
 // Implement the function to generate Monero subaddress using Monero CLI
 function generate_monero_subaddress_function($order_id) {
