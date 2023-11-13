@@ -102,27 +102,35 @@ function check_monero_transaction_status($order_id) {
 // Implement the function to generate Monero subaddress using Monero CLI
 function generate_monero_subaddress_function($order_id) {
     // Path to your Monero CLI executable
-    $monero_cli_path = '~/monero-x86_64-linux-gnu-v0.18.3.1/monero-wallet-cli';
+    $monero_cli_path = '/var/www/monero-x86_64-linux-gnu-v0.18.3.1/monero-wallet-cli';
 
     // Wallet file path
-    $wallet_file = '~/monero-x86_64-linux-gnu-v0.18.3.1/mronion';
+    $wallet_file = '/var/www/monero-x86_64-linux-gnu-v0.18.3.1/mronion';
 
     // Password file path
-    $password_file = '~/woo.txt';
+    $password_file = '/var/www/woo.txt';
 
     // Use the order ID as the label for the subaddress
     $label = 'order_' . $order_id;
 
     // Command to execute
-    $command = escapeshellcmd("$monero_cli_path --wallet-file $wallet_file --password-file $password_file --command \"address new $label\"");
+    $command = escapeshellcmd("$monero_cli_path --wallet-file $wallet_file --password-file $password_file address new $label");
 
     // Execute the command
     $output = shell_exec($command);
 
     // Process the output to extract the new subaddress
-    // Assuming the subaddress is the last line of the output
-    $output_lines = explode("\n", trim($output));
-    $subaddress = end($output_lines);
+    $lines = explode("\n", trim($output));
 
-    return $subaddress;
+    foreach ($lines as $line) {
+        if (strpos($line, $label) !== false) {
+            // Extract the subaddress from the line
+            $parts = explode(" ", $line);
+            $subaddress = $parts[1]; // Assuming subaddress is the second part
+            return $subaddress;
+        }
+    }
+
+    // Return null if no subaddress is found
+    return null;
 }
