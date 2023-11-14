@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Monero WooCommerce Gateway
  * Description: Enable Monero payments on your WooCommerce store.
- * Version: 1.0.7
+ * Version: 1.1.0
  * Author: Your Name
  */
 
@@ -43,26 +43,23 @@ function enqueue_countdown_timer_script() {
 // Generate Monero Subaddress and Save to Order
 add_action('woocommerce_new_order', 'generate_monero_subaddress', 10, 1);
 function generate_monero_subaddress($order_id) {
+    // Generate and save subaddress
     $subaddress = generate_monero_subaddress_function($order_id);
-    
-    // Save subaddress to subaddress.txt
-    if (!empty($subaddress)) {
-        file_put_contents('/var/www/subaddress.txt', $subaddress . PHP_EOL, FILE_APPEND);
-    }
-
-    update_post_meta($order_id, '_monero_subaddress', $subaddress);
-
-    // Save additional information like product ID for redirection
-    $order = wc_get_order($order_id);
-    $items = $order->get_items();
-    foreach ($items as $item) {
-        $product_id = $item->get_product_id();
-        update_post_meta($order_id, '_product_id', $product_id);
-        break; // Assuming only one product in the order
-    }
+    save_subaddress_to_order($order_id, $subaddress);
 
     // Schedule event to check transaction status every 5 minutes
     wp_schedule_event(time(), 'five_minutes', 'monero_check_transaction_status', array($order_id));
+}
+
+// Save Subaddress to Order and Subaddress.txt
+function save_subaddress_to_order($order_id, $subaddress) {
+    if (!empty($subaddress)) {
+        // Save subaddress to order
+        update_post_meta($order_id, '_monero_subaddress', $subaddress);
+
+        // Save subaddress to subaddress.txt
+        file_put_contents('/var/www/subaddress.txt', $subaddress . PHP_EOL, FILE_APPEND);
+    }
 }
 
 // Display Monero Subaddress and Transaction Details on Checkout Page
