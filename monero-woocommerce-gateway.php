@@ -108,9 +108,9 @@ function check_and_confirm_monero_transaction($order_id) {
 }
 
 // Confirm Monero Transaction Function
-function confirm_monero_transaction($user_txid, $user_txkey, $user_monero_address) {
+function confirm_monero_transaction($user_txid, $user_txkey, $subaddress) {
     // Build the Monero CLI command
-    $monero_cli_command = "check_tx_key $user_txid $user_txkey $user_monero_address";
+    $monero_cli_command = "check_tx_key $user_txid $user_txkey $subaddress";
 
     // Run the command and capture the output
     $command_output = shell_exec($monero_cli_command);
