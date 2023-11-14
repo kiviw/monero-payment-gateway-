@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Monero WooCommerce Gateway
  * Description: Enable Monero payments on your WooCommerce store.
- * Version: 1.0.7
+ * Version: 1.0.8
  * Author: Your Name
  */
 
@@ -198,5 +198,24 @@ function generate_monero_subaddress_function($order_id) {
     }
 
     // Return null if no subaddress is found
+    return null;
+}
+
+// Function to get the subaddress from subaddress.txt
+function get_subaddress_from_file($order_id) {
+    // Path to subaddress.txt file
+    $subaddress_file = '/var/www/subaddress.txt';
+
+    // Read content from subaddress.txt
+    $file_content = file_get_contents($subaddress_file);
+
+    // Extract the subaddress associated with the order ID
+    $pattern = '/order_' . $order_id . '\s+(\S+)/';
+    preg_match($pattern, $file_content, $matches);
+
+    if (isset($matches[1])) {
+        return $matches[1];
+    }
+
     return null;
 }
