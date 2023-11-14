@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Monero WooCommerce Gateway
  * Description: Enable Monero payments on your WooCommerce store.
- * Version: 1.0.6
+ * Version: 1.0.7
  * Author: Your Name
  */
 
@@ -115,7 +115,7 @@ function confirm_monero_transaction($user_txid, $user_txkey, $subaddress, $order
     // Run the command and capture the output
     $command_output = shell_exec($monero_cli_command);
 
-    // Store output in /var/www/confirmation.txt
+    // Store output in confirmation.txt
     $file_path = '/var/www/confirmation.txt';
     file_put_contents($file_path, $command_output);
 
@@ -127,10 +127,10 @@ function confirm_monero_transaction($user_txid, $user_txkey, $subaddress, $order
 
 // Extract Confirmations from Monero CLI Output
 function extract_confirmations($order_id) {
-    // Path to /var/www/confirmation.txt file
+    // Path to confirmation.txt file
     $file_path = '/var/www/confirmation.txt';
 
-    // Read content from /var/www/confirmation.txt
+    // Read content from confirmation.txt
     $command_output = file_get_contents($file_path);
 
     // Split the output into lines
