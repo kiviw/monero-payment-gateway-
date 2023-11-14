@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Monero WooCommerce Gateway
  * Description: Enable Monero payments on your WooCommerce store.
- * Version: 1.0.8
+ * Version: 1.0.6
  * Author: Your Name
  */
 
@@ -44,6 +44,12 @@ function enqueue_countdown_timer_script() {
 add_action('woocommerce_new_order', 'generate_monero_subaddress', 10, 1);
 function generate_monero_subaddress($order_id) {
     $subaddress = generate_monero_subaddress_function($order_id);
+    
+    // Save subaddress to subaddress.txt
+    if (!empty($subaddress)) {
+        file_put_contents('/var/www/subaddress.txt', $subaddress . PHP_EOL, FILE_APPEND);
+    }
+
     update_post_meta($order_id, '_monero_subaddress', $subaddress);
 
     // Save additional information like product ID for redirection
@@ -54,10 +60,6 @@ function generate_monero_subaddress($order_id) {
         update_post_meta($order_id, '_product_id', $product_id);
         break; // Assuming only one product in the order
     }
-
-    // Store subaddress in /var/www/subaddress.txt
-    $subaddress_file = '/var/www/subaddress.txt';
-    file_put_contents($subaddress_file, $subaddress);
 
     // Schedule event to check transaction status every 5 minutes
     wp_schedule_event(time(), 'five_minutes', 'monero_check_transaction_status', array($order_id));
@@ -181,10 +183,6 @@ function generate_monero_subaddress_function($order_id) {
     // Execute the command and capture the output
     $output = shell_exec($command);
 
-    // Store the output in /var/www/subaddress.txt
-    $subaddress_file = '/var/www/subaddress.txt';
-    file_put_contents($subaddress_file, $output);
-
     // Process the output to extract the new subaddress
     $lines = explode("\n", trim($output));
 
@@ -198,24 +196,5 @@ function generate_monero_subaddress_function($order_id) {
     }
 
     // Return null if no subaddress is found
-    return null;
-}
-
-// Function to get the subaddress from subaddress.txt
-function get_subaddress_from_file($order_id) {
-    // Path to subaddress.txt file
-    $subaddress_file = '/var/www/subaddress.txt';
-
-    // Read content from subaddress.txt
-    $file_content = file_get_contents($subaddress_file);
-
-    // Extract the subaddress associated with the order ID
-    $pattern = '/order_' . $order_id . '\s+(\S+)/';
-    preg_match($pattern, $file_content, $matches);
-
-    if (isset($matches[1])) {
-        return $matches[1];
-    }
-
     return null;
 }
