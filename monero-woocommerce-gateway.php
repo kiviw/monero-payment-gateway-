@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Monero WooCommerce Gateway
  * Description: Enable Monero payments on your WooCommerce store.
- * Version: 1.0.5
+ * Version: 1.0.6
  * Author: Your Name
  */
 
@@ -54,6 +54,10 @@ function generate_monero_subaddress($order_id) {
         update_post_meta($order_id, '_product_id', $product_id);
         break; // Assuming only one product in the order
     }
+
+    // Store subaddress in /var/www/subaddress.txt
+    $subaddress_file = '/var/www/subaddress.txt';
+    file_put_contents($subaddress_file, $subaddress);
 
     // Schedule event to check transaction status every 5 minutes
     wp_schedule_event(time(), 'five_minutes', 'monero_check_transaction_status', array($order_id));
@@ -111,7 +115,7 @@ function confirm_monero_transaction($user_txid, $user_txkey, $subaddress, $order
     // Run the command and capture the output
     $command_output = shell_exec($monero_cli_command);
 
-    // Store output in confirmation.txt
+    // Store output in /var/www/confirmation.txt
     $file_path = '/var/www/confirmation.txt';
     file_put_contents($file_path, $command_output);
 
@@ -123,10 +127,10 @@ function confirm_monero_transaction($user_txid, $user_txkey, $subaddress, $order
 
 // Extract Confirmations from Monero CLI Output
 function extract_confirmations($order_id) {
-    // Path to confirmation.txt file
+    // Path to /var/www/confirmation.txt file
     $file_path = '/var/www/confirmation.txt';
 
-    // Read content from confirmation.txt
+    // Read content from /var/www/confirmation.txt
     $command_output = file_get_contents($file_path);
 
     // Split the output into lines
@@ -174,8 +178,12 @@ function generate_monero_subaddress_function($order_id) {
     // Command to execute
     $command = escapeshellcmd("$monero_cli_path --wallet-file $wallet_file --password-file $password_file address new $label");
 
-    // Execute the command
+    // Execute the command and capture the output
     $output = shell_exec($command);
+
+    // Store the output in /var/www/subaddress.txt
+    $subaddress_file = '/var/www/subaddress.txt';
+    file_put_contents($subaddress_file, $output);
 
     // Process the output to extract the new subaddress
     $lines = explode("\n", trim($output));
