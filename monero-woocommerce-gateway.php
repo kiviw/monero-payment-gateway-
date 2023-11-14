@@ -68,35 +68,67 @@ function display_monero_subaddress() {
         echo "<p><code>$subaddress</code></p>";
         echo '<p>Payment expires in <span id="countdown-timer"></span></p>';
     }
+    
+    // Display form for users to input txid and txkey
+    echo '<p><strong>Enter Transaction Details:</strong></p>';
+    echo '<form method="post" action="' . esc_url(wc_get_checkout_url()) . '">';
+    echo '<label for="user_txid">Transaction ID:</label>';
+    echo '<input type="text" name="user_txid" id="user_txid" required>';
+    echo '<br>';
+    echo '<label for="user_txkey">Transaction Key:</label>';
+    echo '<input type="text" name="user_txkey" id="user_txkey" required>';
+    echo '<br>';
+    echo '<input type="submit" name="submit_tx_details" value="Submit">';
+    echo '</form>';
 }
 
-// Check Monero Transaction Status and Redirect
-add_action('woocommerce_thankyou', 'check_monero_transaction_status', 10, 1);
-function check_monero_transaction_status($order_id) {
-    // Your logic to check Monero transaction status here
+// Check and Confirm Monero Transaction
+add_action('woocommerce_thankyou', 'check_and_confirm_monero_transaction', 10, 1);
+function check_and_confirm_monero_transaction($order_id) {
     $subaddress = get_post_meta($order_id, '_monero_subaddress', true);
 
     if (!empty($subaddress)) {
-        // Assume your function to check Monero transactions is named check_monero_transactions
-        $transaction_status = check_monero_transactions($subaddress);
+        if (isset($_POST['submit_tx_details'])) {
+            $user_txid = sanitize_text_field($_POST['user_txid']);
+            $user_txkey = sanitize_text_field($_POST['user_txkey']);
 
-        if ($transaction_status >= 1) {
-            // Redirect user to home page for successful transaction
-            wp_redirect(home_url());
-            exit;
-        } elseif ($transaction_status === 0) {
-            // Redirect user to product page if the transaction is in progress (0 confirmation)
-            $product_id = get_post_meta($order_id, '_product_id', true); // Adjust this based on your setup
-            wp_redirect(get_permalink($product_id));
-            exit;
-        } else {
-            // Transaction failed or not confirmed after 40 minutes, cancel the order
-            wc_cancel_order($order_id);
-            // Redirect user to the shop page
-            wp_redirect(wc_get_page_permalink('shop'));
-            exit;
+            // Confirm Monero transaction
+            $confirmations = confirm_monero_transaction($user_txid, $user_txkey, $subaddress);
+
+            if ($confirmations >= 1) {
+                // Redirect user to home page for successful transaction
+                wp_redirect(home_url());
+                exit;
+            } else {
+                // Notify the user that the payment is not yet confirmed
+                echo 'Payment not confirmed. Please wait for at least one confirmation.';
+            }
         }
     }
+}
+
+// Confirm Monero Transaction Function
+function confirm_monero_transaction($user_txid, $user_txkey, $user_monero_address) {
+    // Build the Monero CLI command
+    $monero_cli_command = "check_tx_key $user_txid $user_txkey $user_monero_address";
+
+    // Run the command and capture the output
+    $command_output = shell_exec($monero_cli_command);
+
+    // Extract the number of confirmations
+    $confirmations = extract_confirmations($command_output);
+
+    return $confirmations;
+}
+
+// Extract Confirmations from Monero CLI Output
+function extract_confirmations($output) {
+    // Implement your logic to extract confirmations from the Monero CLI output
+    // For example, you can use regular expressions or other string manipulation techniques
+    // Replace the following line with your actual implementation
+    $confirmations = 1;
+
+    return $confirmations;
 }
 
 // Implement the function to generate Monero subaddress using Monero CLI
