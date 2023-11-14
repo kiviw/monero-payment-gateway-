@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Monero WooCommerce Gateway
  * Description: Enable Monero payments on your WooCommerce store.
- * Version: 1.0.0
+ * Version: 1.0.5
  * Author: Your Name
  */
 
