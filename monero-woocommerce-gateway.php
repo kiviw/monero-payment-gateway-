@@ -123,12 +123,23 @@ function confirm_monero_transaction($user_txid, $user_txkey, $subaddress) {
 
 // Extract Confirmations from Monero CLI Output
 function extract_confirmations($output) {
-    // Implement your logic to extract confirmations from the Monero CLI output
-    // For example, you can use regular expressions or other string manipulation techniques
-    // Replace the following line with your actual implementation
-    $confirmations = 1;
+    // Split the output into lines
+    $lines = explode("\n", $output);
 
-    return $confirmations;
+    // Iterate through each line to find the one containing the confirmation details
+    foreach ($lines as $line) {
+        if (strpos($line, 'This transaction has') !== false) {
+            // Extract the number of confirmations using regular expression
+            preg_match('/This transaction has (\d+) confirmations/', $line, $matches);
+
+            if (isset($matches[1])) {
+                return intval($matches[1]);
+            }
+        }
+    }
+
+    // Return 0 if no confirmation details found
+    return 0;
 }
 
 // Implement the function to generate Monero subaddress using Monero CLI
