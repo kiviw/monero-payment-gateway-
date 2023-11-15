@@ -1,4 +1,3 @@
-<?php
 if (!class_exists('WC_Payment_Gateway')) {
     return;
 }
@@ -17,7 +16,7 @@ class WC_Monero_Gateway extends WC_Payment_Gateway {
     public function process_payment($order_id) {
         $order = wc_get_order($order_id);
 
-        $subaddress = generate_monero_subaddress_function();
+        $subaddress = generate_monero_subaddress_function($order_id);
         update_post_meta($order_id, '_monero_subaddress', $subaddress);
 
         $items = $order->get_items();
