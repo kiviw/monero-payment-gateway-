@@ -58,20 +58,3 @@ function generate_monero_subaddress_function($order_id) {
     // Execute the command and capture the output (not used)
     shell_exec($command);
 }
-
-// Display Countdown Timer on Checkout Page
-add_action('woocommerce_review_order_before_submit', 'display_countdown_timer');
-function display_countdown_timer() {
-    $order_id = wc_get_order_id_by_order_key(WC()->session->get('order_awaiting_payment'));
-    $expiration_time = strtotime('+40 minutes', current_time('timestamp'));
-    $remaining_time = max(0, $expiration_time - time());
-
-    echo '<p><strong>Payment expires in:</strong> <span id="countdown-timer">' . $remaining_time . '</span> seconds</p>';
-    ?>
-    <script>
-        // Set the expiration time for the countdown timer
-        var expirationTime = <?php echo json_encode($expiration_time); ?>;
-    </script>
-    <?php
-    wp_enqueue_script('countdown-timer', plugin_dir_url(__FILE__) . 'countdown-timer.js', array('jquery'), '1.0', true);
-}
