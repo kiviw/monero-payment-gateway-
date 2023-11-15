@@ -66,7 +66,7 @@ function display_countdown_timer() {
     $expiration_time = strtotime('+40 minutes', current_time('timestamp'));
     $remaining_time = max(0, $expiration_time - time());
 
-    echo '<p><strong>Payment expires in:</strong> <span id="countdown-timer">' . gmdate("i:s", $remaining_time) . '</span></p>';
+    echo '<p><strong>Payment expires in:</strong> <span id="countdown-timer">' . $remaining_time . '</span> seconds</p>';
     ?>
     <script>
         // Set the expiration time for the countdown timer
