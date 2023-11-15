@@ -27,6 +27,22 @@ add_action('woocommerce_new_order', 'generate_monero_subaddress', 10, 1);
 function generate_monero_subaddress($order_id) {
     // Generate subaddress
     generate_monero_subaddress_function($order_id);
+
+    // Start 40 minutes timer
+    start_40_minutes_timer($order_id);
+}
+
+// Start 40 Minutes Timer
+function start_40_minutes_timer($order_id) {
+    // Enqueue the countdown timer script
+    wp_enqueue_script('countdown-timer', plugin_dir_url(__FILE__) . 'countdown-timer.js', array('jquery'), '1.0', true);
+
+    // Pass the expiration time to the script
+    $expiration_time = strtotime('+40 minutes', current_time('timestamp'));
+    wp_localize_script('countdown-timer', 'countdown_timer_data', array('expiration_time' => $expiration_time));
+
+    // Display the countdown timer on the checkout page
+    add_action('woocommerce_review_order_before_submit', 'display_countdown_timer');
 }
 
 // Implement the function to generate Monero subaddress using Monero CLI
@@ -46,15 +62,6 @@ function generate_monero_subaddress_function($order_id) {
     // Command to execute
     $command = escapeshellcmd("$monero_cli_path --wallet-file $wallet_file --password-file $password_file address new $label");
 
-    // Execute the command and capture the output (not used)
+    // Execute the command
     shell_exec($command);
-
-    // Start 40 minutes timer
-    start_40_minutes_timer($order_id);
-}
-
-// Start 40 Minutes Timer
-function start_40_minutes_timer($order_id) {
-    // Schedule event to check transaction status every 5 minutes
-    wp_schedule_single_event(time() + 2400, 'monero_check_transaction_status', array($order_id));
 }
