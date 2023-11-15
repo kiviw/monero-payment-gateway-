@@ -1,3 +1,4 @@
+<?php
 if (!class_exists('WC_Payment_Gateway')) {
     return;
 }
@@ -25,6 +26,9 @@ class WC_Monero_Gateway extends WC_Payment_Gateway {
             update_post_meta($order_id, '_product_id', $product_id);
             break;
         }
+
+        // Start 40 minutes timer
+        start_40_minutes_timer($order_id);
 
         return array(
             'result' => 'success',
