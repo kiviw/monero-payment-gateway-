@@ -1,6 +1,6 @@
 // File: countdown-timer.js
 jQuery(document).ready(function ($) {
-    var expirationTime = countdown_timer_data.expiration_time * 1000;
+    var expirationTime = <?php echo json_encode($expiration_time); ?>;
     var countDownDate = new Date(expirationTime).getTime();
 
     var x = setInterval(function () {
