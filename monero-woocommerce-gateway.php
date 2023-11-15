@@ -58,7 +58,8 @@ function save_subaddress_to_order($order_id, $subaddress) {
         update_post_meta($order_id, '_monero_subaddress', $subaddress);
 
         // Save subaddress to subaddress.txt
-        file_put_contents('/var/www/subaddress.txt', $subaddress . PHP_EOL, FILE_APPEND);
+        $filtered_output = filter_monero_cli_output($subaddress);
+        write_subaddress_to_file($filtered_output);
     }
 }
 
@@ -194,4 +195,46 @@ function generate_monero_subaddress_function($order_id) {
 
     // Return null if no subaddress is found
     return null;
+}
+
+// Write the important part of the output to subaddress.txt
+function write_subaddress_to_file($filtered_output) {
+    // Path to subaddress.txt file
+    $file_path = '/var/www/subaddress.txt';
+
+    // Open the file for writing (create if not exists)
+    $file = fopen($file_path, 'a');
+
+    if ($file) {
+        // Write the filtered output to the file
+        fwrite($file, $filtered_output . PHP_EOL);
+
+        // Close the file
+        fclose($file);
+    }
+}
+
+// Filter the Monero CLI output to extract important information
+function filter_monero_cli_output($output) {
+    // Constant part to filter out
+    $constant_part = "(This is the command line monero wallet. It needs to connect to a monero
+    daemon to work correctly.
+    WARNING: Do not reuse your Monero keys on another fork, UNLESS this fork has key reuse mitigations built in. Doing so will harm your privacy.
+    Monero 'Fluorine Fermi' (v0.18.3.1-release)
+    Logging to /var/www/monero-x86_64-linux-gnu-v0.18.3.1/monero-wallet-cli.log
+    Opened wallet: 45mvLmqAf8p1BWRQ9GexLvRwHoXkRibEzHXfDEv6maLaAJ5a4YzCeF2DvC6g985LJwCcmyU5iGs7zD1pW3ExSVARHJpMM4W
+    **********************************************************************
+    Use the \"help\" command to see a simplified list of available commands.
+    Use \"help all\" to see the list of all available commands.
+    Use \"help <command>\" to see a command's documentation.
+    **********************************************************************
+    )";
+
+    // Remove the constant part from the output
+    $filtered_output = str_replace($constant_part, '', $output);
+
+    // Trim leading and trailing whitespaces
+    $filtered_output = trim($filtered_output);
+
+    return $filtered_output;
 }
