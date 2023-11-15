@@ -1,6 +1,7 @@
 // File: countdown-timer.js
 jQuery(document).ready(function ($) {
-    var countDownDate = new Date(countdown_timer_data.expiration_time * 1000).getTime();
+    var expirationTime = countdown_timer_data.expiration_time * 1000;
+    var countDownDate = new Date(expirationTime).getTime();
 
     var x = setInterval(function () {
         var now = new Date().getTime();
@@ -13,7 +14,7 @@ jQuery(document).ready(function ($) {
         // Display the countdown
         document.getElementById("countdown-timer").innerHTML = minutes + "m " + seconds + "s ";
 
-        if (distance < 0) {
+        if (distance <= 0) {
             clearInterval(x);
             window.location.href = '<?php echo wc_get_page_permalink("shop"); ?>';
         }
